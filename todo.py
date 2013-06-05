@@ -157,8 +157,8 @@ def edit(filename, numOfLine, newText):
     #print( lines )
     #lines = lines[:numOfLine] + lines[numOfLine+1:]
     try:
-        orig = lines[numOfLine-1]
-        lines[numOfLine-1] = newText.replace(MAGIC_REPLACE_PLACEHOLDER, orig)
+        orig = lines[numOfLine-1].strip()
+        lines[numOfLine-1] = newText.replace(MAGIC_REPLACE_PLACEHOLDER, orig) + "\n"
         f.writelines(lines)
     except:
         print(str(numOfLine) + " task is not exists")
