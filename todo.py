@@ -191,7 +191,7 @@ def handleCommand(command, filename, args):
         f.close()
     elif command == "done":
         if not is_int(args[0]):
-            print("[Error] numOfLine(args0) is not a integer" )
+            print("Number of line(args0) is not a integer" )
             return
         numOfLine = int(args[0])
         getThingsDone(filename, numOfLine)
@@ -201,7 +201,7 @@ def handleCommand(command, filename, args):
         f.close()
     elif command == "edit":
         if not is_int(args[0]):
-            print("[Error] numOfLine(args0) is not a integer" )
+            print("Number Of line(args0) is not a integer" )
             return
         numOfLine = int(args[0])
         text = " ".join(args[1:])
@@ -211,7 +211,7 @@ def handleCommand(command, filename, args):
         list(f.readlines())
         f.close()
     elif command == "clean":
-        confirm = input("Are you sure? It's will delete ALL Tasks! [Y/N]: ")
+        confirm = input("Are you sure? It will delete ALL Tasks! [Y/N]: ")
         if confirm == "Y":
             f = open(filename, "w")
             # delete all lines
