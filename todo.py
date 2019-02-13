@@ -1,6 +1,12 @@
 # conding: utf-8 
 import sys, re
 import getopt
+import win32console
+from colorama import init, Fore, Back, Style
+
+# use Colorama
+init()
+colorlist = ["BLACK", "RED", "GREEN", "YELLOW", "BLUE", "MAGENTA", "CYAN", "WHITE"]
 
 DEBUG = True
 NONE_PRIORITY = "z" # 默认优先级
@@ -14,6 +20,23 @@ project_reg = r"\+[^ ]+ {0,1}"
 project_prefix = "+"
 context_reg = r"@[^ ]+ {0,1}"
 context_prefix = "@"
+
+# To be able to edit the input line
+_stdin = win32console.GetStdHandle(win32console.STD_INPUT_HANDLE)
+
+def input_def(prompt, default=''):
+    keys = []
+    # for c in unicode(default):
+    for c in default:
+        evt = win32console.PyINPUT_RECORDType(win32console.KEY_EVENT)
+        evt.Char = c
+        evt.RepeatCount = 1
+        evt.KeyDown = True
+        keys.append(evt)
+
+    _stdin.WriteConsoleInput(keys)
+    # return raw_input(prompt)
+    return input(prompt)
 
 def is_int(str):
     try:
@@ -145,20 +168,23 @@ def list(lines):
     for t in tasks:
         #print( t )
         if not t.isCompleted: 
-            print("  " + str(t.id) + ": " +  t.text.strip() )
+            print('\033[;1;31m' + "{:02}: {}".format(t.id, t.text.strip()) + "\033[;0;0m")
 
 
-def edit(filename, numOfLine, newText):
+def edit(filename, numOfLine):
     f = open(filename, "r+")
     lines = f.readlines()
     f.close()
 
     f = open(filename, "w")
     #print( lines )
-    #lines = lines[:numOfLine] + lines[numOfLine+1:]
+    # lines = lines[:numOfLine] + lines[numOfLine+1:]
     try:
         orig = lines[numOfLine-1].strip()
-        lines[numOfLine-1] = newText.replace(MAGIC_REPLACE_PLACEHOLDER, orig) + "\n"
+        # input(orig)
+        newtxt = input_def("EDIT: ", orig)
+        # lines[numOfLine-1] = newText.replace(MAGIC_REPLACE_PLACEHOLDER, newtxt) + "\n"
+        lines[numOfLine-1] = newtxt + "\n"
         f.writelines(lines)
     except:
         print(str(numOfLine) + " task is not exists")
@@ -171,11 +197,11 @@ def getThingsDone(filename, numOfLine):
 
 
 def handleCommand(command, filename, args):
-    if command == "list":
+    if command == "list" or command == "l":
         f = open(filename, "r+")
         list(f.readlines())
         f.close()
-    elif command == "add":
+    elif command == "add" or command == "a":
         text = " ".join(args)
         f = open(filename, "a+")
         f.write(text+"\n")
@@ -184,12 +210,15 @@ def handleCommand(command, filename, args):
         f = open(filename, "r+")
         list(f.readlines())
         f.close()
-    elif command == "origin":
+    elif command == "origin" or command == "o":
         f = open(filename, "r+")
         for line in f:
             print(line.strip())
         f.close()
-    elif command == "done":
+    elif command == "done" or command == "d":
+        if not args:
+            print("No line number given")
+            return
         if not is_int(args[0]):
             print("Number of line(args0) is not a integer" )
             return
@@ -199,17 +228,20 @@ def handleCommand(command, filename, args):
         f = open(filename, "r+")
         list(f.readlines())
         f.close()
-    elif command == "edit":
+    elif command == "edit" or command == "e":
+        if not args:
+            print("No line number given")
+            return
         if not is_int(args[0]):
             print("Number Of line(args0) is not a integer" )
             return
         numOfLine = int(args[0])
-        text = " ".join(args[1:])
-        edit(filename, numOfLine, text)
+        # text = " ".join(args[1:])
+        edit(filename, numOfLine)
         # re-open
-        f = open(filename, "r+")
-        list(f.readlines())
-        f.close()
+        # f = open(filename, "r+")
+        # list(f.readlines())
+        # f.close()
     elif command == "clean":
         confirm = input("Are you sure? It will delete ALL Tasks! [Y/N]: ")
         if confirm == "Y":
@@ -256,11 +288,9 @@ def main(argv):
         tmp = command.split(" ")
         command = tmp[0]
         args = tmp[1:]
-        if command == "exit":
+        if (command == "exit") or (command == "quit") or (command == "q"):
             sys.exit()
         handleCommand(command, _filename, args)
-
-
 
 
 if __name__ == "__main__":
