@@ -6,7 +6,7 @@ from colorama import init, Fore, Back, Style
 
 # use Colorama
 init()
-colorlist = ["BLACK", "RED", "GREEN", "YELLOW", "BLUE", "MAGENTA", "CYAN", "WHITE"]
+colorlist = [(30,"BLACK"), (31,"RED"), (32,"GREEN"), (33,"YELLOW"), (34,"BLUE"), (35,"MAGENTA"), (36,"CYAN"), (37,"WHITE")]
 
 DEBUG = True
 NONE_PRIORITY = "z" # 默认优先级
@@ -165,10 +165,14 @@ def list(lines):
 
     tasks = todoTasks + completedTasks
 
+    color = 31
     for t in tasks:
         #print( t )
         if not t.isCompleted: 
-            print('\033[;1;31m' + "{:02}: {}".format(t.id, t.text.strip()) + "\033[;0;0m")
+            print('\033[;1;'+str(color)+'m' + "{:02}: {}".format(t.id, t.text.strip()) + "\033[;0;0m")
+            color += 1
+            if color > 37:
+                color = 31
 
 
 def edit(filename, numOfLine):
@@ -195,6 +199,24 @@ def edit(filename, numOfLine):
 def getThingsDone(filename, numOfLine):
     edit(filename, numOfLine, complete_prefix + " " + MAGIC_REPLACE_PLACEHOLDER)
 
+def deleteTask(filename, numOfLine):
+    f = open(filename, "r+")
+    lines = f.readlines()
+    f.close()
+
+    f = open(filename, "w")
+    try:
+        lines.remove(lines[numOfLine-1])
+        f.writelines(lines)
+    except:
+        print(str(numOfLine) + " task is not exists")
+    finally:
+        f.close()
+    
+    handleCommand("clear", filename, "")
+    handleCommand("list", filename, "")
+
+    
 
 def handleCommand(command, filename, args):
     if command == "list" or command == "l":
@@ -215,7 +237,7 @@ def handleCommand(command, filename, args):
         for line in f:
             print(line.strip())
         f.close()
-    elif command == "done" or command == "d":
+    elif command == "done" or command == "x":
         if not args:
             print("No line number given")
             return
@@ -242,6 +264,15 @@ def handleCommand(command, filename, args):
         # f = open(filename, "r+")
         # list(f.readlines())
         # f.close()
+    elif command == "delete" or command == "d":
+        if not args:
+            print("No line number given")
+            return
+        if not is_int(args[0]):
+            print("Number of line(args0) is not a integer" )
+            return
+        numOfLine = int(args[0])
+        deleteTask(filename, numOfLine)
     elif command == "clean":
         confirm = input("Are you sure? It will delete ALL Tasks! [Y/N]: ")
         if confirm == "Y":
@@ -291,6 +322,8 @@ def main(argv):
         if (command == "exit") or (command == "quit") or (command == "q"):
             sys.exit()
         handleCommand(command, _filename, args)
+
+
 
 
 if __name__ == "__main__":
