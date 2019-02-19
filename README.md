@@ -8,7 +8,3 @@ Set the PATH Variable to the Folder of the todo.py to use it from every "positio
 
 Python Modul "colorama" and "pywin32" is needed.
 
-
-Before using the todo.py it's recommended to change the codepade of the command shell to unicode.
-
-command: chcp 65001
