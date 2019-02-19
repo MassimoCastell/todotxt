@@ -1,8 +1,9 @@
-# conding: utf-8 
+# -*- coding: utf-8 -*-
 import sys, re
 import getopt
 import win32console
 from colorama import init, Fore, Back, Style
+import configparser
 
 # use Colorama
 init()
@@ -29,7 +30,7 @@ def input_def(prompt, default=''):
     # for c in unicode(default):
     for c in default:
         evt = win32console.PyINPUT_RECORDType(win32console.KEY_EVENT)
-        evt.Char = c
+        evt.Char = (c)
         evt.RepeatCount = 1
         evt.KeyDown = True
         keys.append(evt)
@@ -104,7 +105,7 @@ def parseTask(text):
         task.priority = match.strip().replace("(", "").replace(")", "")
         rest = rest.replace(match, "")
     #else:
-        #print( "no priotiry" )
+        #print( "no priority" )
 
     # Rule 2: A task’s creation date may optionally appear directly after priority and a space.
     m = re.search(date_reg, rest)
@@ -139,7 +140,6 @@ def usage():
     -h --help show help info
     -a --add add a new task
     -l --list list all tasks(sorted)
-    -o --origin show origin text
     -i --input input text file name
     """ )
         
@@ -216,7 +216,53 @@ def deleteTask(filename, numOfLine):
     handleCommand("clear", filename, "")
     handleCommand("list", filename, "")
 
+def handlePrefix(filename, command, numOfLine, prio=""):
+    f = open(filename, "r+")
+    lines = f.readlines()
+    f.close()
+
+    f = open(filename, "w")
+    try:
+        orig = lines[numOfLine-1].strip()
+        if command == "done":
+            newtxt = str(complete_prefix)+" "+str(orig)
+            lines[numOfLine-1] = newtxt + "\n"
+        elif command == "prio":
+            m = re.search(priority_reg, orig)
+            if m is not None:
+                orignoprio = orig[4:]
+                newtxt = "("+str(prio).upper()+") "+str(orignoprio)
+                lines[numOfLine-1] = newtxt + "\n"
+            else:
+                newtxt = "("+str(prio).upper()+") "+str(orig)
+                lines[numOfLine-1] = newtxt + "\n"
+        f.writelines(lines)
+    except:
+        print(str(numOfLine) + " task is not exists")
+    finally:
+        f.close()
     
+    handleCommand("clear", filename, "")
+    handleCommand("list", filename, "")
+
+def addFlag(filename, command, numOfLine, flag_text):
+    f = open(filename, "r+")
+    lines = f.readlines()
+    f.close()
+
+    f = open(filename, "w")
+    try:
+        orig = lines[numOfLine-1].strip()
+        newtxt = str(orig)+" "+str(command)+str(flag_text)
+        lines[numOfLine-1] = newtxt + "\n"
+        f.writelines(lines)
+    except:
+        print(str(numOfLine) + " task is not exists")
+    finally:
+        f.close()
+    
+    handleCommand("clear", filename, "")
+    handleCommand("list", filename, "")
 
 def handleCommand(command, filename, args):
     if command == "list" or command == "l":
@@ -232,11 +278,6 @@ def handleCommand(command, filename, args):
         f = open(filename, "r+")
         list(f.readlines())
         f.close()
-    elif command == "origin" or command == "o":
-        f = open(filename, "r+")
-        for line in f:
-            print(line.strip())
-        f.close()
     elif command == "done" or command == "x":
         if not args:
             print("No line number given")
@@ -245,7 +286,7 @@ def handleCommand(command, filename, args):
             print("Number of line(args0) is not a integer" )
             return
         numOfLine = int(args[0])
-        getThingsDone(filename, numOfLine)
+        handlePrefix(filename, "done", numOfLine)
         # re-open
         f = open(filename, "r+")
         list(f.readlines())
@@ -273,6 +314,31 @@ def handleCommand(command, filename, args):
             return
         numOfLine = int(args[0])
         deleteTask(filename, numOfLine)
+    elif command == "+" or command == "@"  or command == "project" or command == "context" or command == "p" or command == "c":
+        if not args:
+            print("No line number given")
+            return
+        if not is_int(args[0]):
+            print("Number of line(args0) is not a integer" )
+            return
+        if command == "+" or command == "project" or command == "p":
+            command = "+"
+        if command == "@" or command == "context" or command == "c":
+            command = "@"
+        numOfLine = int(args[0])
+        flag_text = str(args[1])
+        addFlag(filename, command, numOfLine, flag_text)
+    elif command == "prio" or command == "i":
+        print("set prio")
+        if not args:
+            print("No line number given")
+            return
+        if not is_int(args[0]):
+            print("Number of line(args0) is not a integer" )
+            return
+        numOfLine = int(args[0])
+        prio = str(args[1])
+        handlePrefix(filename, "prio", numOfLine, prio)
     elif command == "clean":
         confirm = input("Are you sure? It will delete ALL Tasks! [Y/N]: ")
         if confirm == "Y":
@@ -287,12 +353,16 @@ def handleCommand(command, filename, args):
 
 def main(argv):
     try:                                
-        opts, args = getopt.getopt(argv, "a:hloi:", ["add=", "help", "list", "origin", "input="]) 
+        opts, args = getopt.getopt(argv, "a:hloi:", ["add=", "help", "list", "input="]) 
     except getopt.GetoptError:           
         usage()                          
         sys.exit(2)  
 
-    _filename = "todo.txt"
+    config = configparser.ConfigParser()
+    config.read('todo.ini')
+
+    _filename = config['files']['todofile']
+    print(_filename)
     _text = None
 
     command = "list"
@@ -306,8 +376,6 @@ def main(argv):
             _text = arg
         elif opt in ("-l", "--list"):
             command = "list"
-        elif opt in ("-o", "--origin"):
-            command = "origin"
 
         if opt in ("-i", "--input"):
             _filename = arg
