@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import sys, re
+import sys, re, os
 import getopt
 import win32console
 from colorama import init, Fore, Back, Style
@@ -359,10 +359,12 @@ def main(argv):
         sys.exit(2)  
 
     config = configparser.ConfigParser()
-    config.read('todo.ini')
+    os.chdir(os.path.dirname(__file__))
+    wrkdir = os.getcwd()
+    config.read(str(wrkdir)+'\\todo.ini')
 
-    _filename = config['files']['todofile']
-    print(_filename)
+    _todofile = config['files']['todofile']
+    _donefile = config['files']['donefile']
     _text = None
 
     command = "list"
@@ -378,9 +380,9 @@ def main(argv):
             command = "list"
 
         if opt in ("-i", "--input"):
-            _filename = arg
+            _todofile = arg
 
-    handleCommand(command, _filename, _text)
+    handleCommand(command, _todofile, _text)
 
     while True:
         command = input(":")
@@ -389,9 +391,7 @@ def main(argv):
         args = tmp[1:]
         if (command == "exit") or (command == "quit") or (command == "q"):
             sys.exit()
-        handleCommand(command, _filename, args)
-
-
+        handleCommand(command, _todofile, args)
 
 
 if __name__ == "__main__":
