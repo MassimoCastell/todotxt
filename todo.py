@@ -189,10 +189,10 @@ def edit(filename, numOfLine):
         newtxt = input_def("EDIT: ", orig)
         # lines[numOfLine-1] = newText.replace(MAGIC_REPLACE_PLACEHOLDER, newtxt) + "\n"
         lines[numOfLine-1] = newtxt + "\n"
-        f.writelines(lines)
     except:
         print(str(numOfLine) + " task is not exists")
     finally:
+        f.writelines(lines)
         f.close()
 
 
@@ -207,10 +207,10 @@ def deleteTask(filename, numOfLine):
     f = open(filename, "w")
     try:
         lines.remove(lines[numOfLine-1])
-        f.writelines(lines)
     except:
         print(str(numOfLine) + " task is not exists")
     finally:
+        f.writelines(lines)
         f.close()
     
     handleCommand("clear", filename, "")
@@ -236,10 +236,10 @@ def handlePrefix(filename, command, numOfLine, prio=""):
             else:
                 newtxt = "("+str(prio).upper()+") "+str(orig)
                 lines[numOfLine-1] = newtxt + "\n"
-        f.writelines(lines)
     except:
         print(str(numOfLine) + " task is not exists")
     finally:
+        f.writelines(lines)
         f.close()
     
     handleCommand("clear", filename, "")
