@@ -7,6 +7,7 @@ import configparser
 
 # use Colorama
 init()
+taskcolorlist = [(33,"YELLOW"), (32,"GREEN"), (34,"BLUE"), (37,"WHITE")]
 colorlist = [(30,"BLACK"), (31,"RED"), (32,"GREEN"), (33,"YELLOW"), (34,"BLUE"), (35,"MAGENTA"), (36,"CYAN"), (37,"WHITE")]
 
 DEBUG = True
@@ -50,12 +51,19 @@ class Task:
     def __init__(self, text):
         self.text = text
         self.priority = NONE_PRIORITY
+        self.prioritystring = ""
         self.perpendedDate = None
         self.projects = []
+        # set projekt color magenta
+        self.projectscolor = 35
         self.contexts = []
+        # set context color red
+        self.contextscolor = 31
         self.isCompleted = False
         self.completedDate = None
         self.taskContent = None
+        # set default color to 4th element of taskcolorlist because tasks with prio rotate through the first 3 colors
+        self.color = 3
         self.id = 0
 
     def __str__(self):
@@ -103,7 +111,11 @@ def parseTask(text):
     if m is not None:
         match = m.group(0)
         task.priority = match.strip().replace("(", "").replace(")", "")
+        task.prioritystring = "("+task.priority+")"
         rest = rest.replace(match, "")
+        # rotate through the 3 elements of the taskcolorlist. Using ascii code and modulo operator
+        # if more colors a wished the the "62" and the divisor should be adjusted
+        task.color = (ord(task.priority)-62) % 3
     #else:
         #print( "no priority" )
 
@@ -165,15 +177,25 @@ def list(lines):
 
     tasks = todoTasks + completedTasks
 
-    color = 31
     for t in tasks:
         #print( t )
         if not t.isCompleted: 
-            print('\033[;1;'+str(color)+'m' + "{:02}: {}".format(t.id, t.text.strip()) + "\033[;0;0m")
-            color += 1
-            if color > 37:
-                color = 31
-
+            # print('\033[;1;'+str(color)+'m' + "{:02}: {}".format(t.id, t.text.strip()) + "\033[;0;0m")
+            tprojects = ""
+            if t.projects:
+                for x in t.projects:
+                    tprojects = tprojects+" "+str("+"+str(x))
+            tcontexts = ""
+            if t.contexts:
+                for x in t.contexts:
+                    tcontexts = tcontexts+" "+str("@"+str(x))
+            tpriority = ""
+            if t.prioritystring:
+                tpriority = t.prioritystring+" "
+            print('\033[;1;'+str(taskcolorlist[t.color][0])+'m' + "{:02}: ".format(t.id)+ tpriority + t.textContent.strip() + '\033[;0;0m'+
+                  '\033[;1;'+str(t.projectscolor)+'m' + "{}".format(tprojects)+
+                  '\033[;1;'+str(t.contextscolor)+'m' + "{}".format(tcontexts)+
+                  '\033[;0;0m')
 
 def edit(filename, numOfLine):
     f = open(filename, "r+")
@@ -299,12 +321,11 @@ def handleCommand(command, filename, args):
             print("Number Of line(args0) is not a integer" )
             return
         numOfLine = int(args[0])
-        # text = " ".join(args[1:])
         edit(filename, numOfLine)
         # re-open
-        # f = open(filename, "r+")
-        # list(f.readlines())
-        # f.close()
+        f = open(filename, "r+")
+        list(f.readlines())
+        f.close()
     elif command == "delete" or command == "d":
         if not args:
             print("No line number given")
@@ -352,11 +373,17 @@ def handleCommand(command, filename, args):
 
 
 def main(argv):
-    try:                                
-        opts, args = getopt.getopt(argv, "a:hloi:", ["add=", "help", "list", "input="]) 
-    except getopt.GetoptError:           
-        usage()                          
-        sys.exit(2)  
+    # try:                                
+    #     opts, args = getopt.getopt(argv, "a:hloi:", ["add=", "help", "list", "input="]) 
+    #     print(opts, args)
+    # except getopt.GetoptError:           
+    #     usage()                          
+    #     sys.exit(2)
+    if argv:
+        cmdcommand = argv[0]
+        cmdtext = argv[1:]
+    else:
+        cmdcommand = ""
 
     config = configparser.ConfigParser()
     os.chdir(os.path.dirname(__file__))
@@ -367,22 +394,19 @@ def main(argv):
     _donefile = config['files']['donefile']
     _text = None
 
-    command = "list"
-
-    for opt, arg in opts:
-        if opt in ("-h", "--help"):
-            usage()                          
-            sys.exit()  
-        elif opt in ("-a", "--add"):
-            command = "add"
-            _text = arg
-        elif opt in ("-l", "--list"):
-            command = "list"
-
-        if opt in ("-i", "--input"):
-            _todofile = arg
-
-    handleCommand(command, _todofile, _text)
+    if cmdcommand in ("-h", "--help"):
+        usage()                          
+        sys.exit()  
+    elif cmdcommand in ("-a", "--add"):
+        command = "add"
+        _text = arg
+    elif cmdcommand in ("ls", "list"):
+        handleCommand("list", _todofile, _text)
+        sys.exit()
+    if cmdcommand in ("-i", "--input"):
+        _todofile = arg
+    
+    handleCommand("list", _todofile, _text)
 
     while True:
         command = input(":")
