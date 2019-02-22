@@ -373,17 +373,12 @@ def handleCommand(command, filename, args):
 
 
 def main(argv):
-    # try:                                
-    #     opts, args = getopt.getopt(argv, "a:hloi:", ["add=", "help", "list", "input="]) 
-    #     print(opts, args)
-    # except getopt.GetoptError:           
-    #     usage()                          
-    #     sys.exit(2)
     if argv:
         cmdcommand = argv[0]
         cmdtext = argv[1:]
     else:
         cmdcommand = ""
+        cmdtext = ""
 
     config = configparser.ConfigParser()
     os.chdir(os.path.dirname(__file__))
@@ -394,12 +389,12 @@ def main(argv):
     _donefile = config['files']['donefile']
     _text = None
 
-    if cmdcommand in ("-h", "--help"):
+    if cmdcommand in ("h", "help"):
         usage()                          
         sys.exit()  
-    elif cmdcommand in ("-a", "--add"):
-        command = "add"
-        _text = arg
+    elif cmdcommand in ("a", "add"):
+        handleCommand("add", _todofile, cmdtext)
+        sys.exit()
     elif cmdcommand in ("ls", "list"):
         handleCommand("list", _todofile, _text)
         sys.exit()
