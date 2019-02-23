@@ -145,14 +145,21 @@ def parseTask(text):
     return task
 
 def usage():
-    print( """USAGE: todo.py -a yourtask
+    print( """USAGE: todo.py <command> <taskid> <text>
+    Without options starts the editor mode.
 
     options:
 
-    -h --help show help info
-    -a --add add a new task
-    -l --list list all tasks(sorted)
-    -i --input input text file name
+    h or help                   show help info
+    a or add                    add a new task
+    ls or list                  list all tasks(sorted by prio)
+    x or do or done <id>        marks task as done
+    e or edit <id>              edit text of task
+    del or delete <id>          deletes task
+    + or project <id> <text>    add project flag to task
+    @ or context <id> <text>    add context flag to task
+    p or prio <id>              set priority of task. Empty <id> deletes prio
+    clean                       deletes all task
     """ )
         
 
@@ -251,10 +258,15 @@ def handlePrefix(filename, command, numOfLine, prio=""):
             lines[numOfLine-1] = newtxt + "\n"
         elif command == "prio":
             m = re.search(priority_reg, orig)
+            print(prio)
             if m is not None:
-                orignoprio = orig[4:]
-                newtxt = "("+str(prio).upper()+") "+str(orignoprio)
-                lines[numOfLine-1] = newtxt + "\n"
+                if prio == "empty":
+                    newtxt = orig[4:]
+                    lines[numOfLine-1] = newtxt + "\n"
+                else:
+                    orignoprio = orig[4:]
+                    newtxt = "("+str(prio).upper()+") "+str(orignoprio)
+                    lines[numOfLine-1] = newtxt + "\n"
             else:
                 newtxt = "("+str(prio).upper()+") "+str(orig)
                 lines[numOfLine-1] = newtxt + "\n"
@@ -287,7 +299,7 @@ def addFlag(filename, command, numOfLine, flag_text):
     handleCommand("list", filename, "")
 
 def handleCommand(command, filename, args):
-    if command == "list" or command == "l":
+    if command == "list" or command == "ls":
         f = open(filename, "r+")
         list(f.readlines())
         f.close()
@@ -300,7 +312,7 @@ def handleCommand(command, filename, args):
         f = open(filename, "r+")
         list(f.readlines())
         f.close()
-    elif command == "done" or command == "x":
+    elif command == "done" or command == "do" or command == "x":
         if not args:
             print("No line number given")
             return
@@ -326,7 +338,7 @@ def handleCommand(command, filename, args):
         f = open(filename, "r+")
         list(f.readlines())
         f.close()
-    elif command == "delete" or command == "d":
+    elif command == "delete" or command == "del":
         if not args:
             print("No line number given")
             return
@@ -335,7 +347,7 @@ def handleCommand(command, filename, args):
             return
         numOfLine = int(args[0])
         deleteTask(filename, numOfLine)
-    elif command == "+" or command == "@"  or command == "project" or command == "context" or command == "p" or command == "c":
+    elif command == "+" or command == "@"  or command == "project" or command == "context":
         if not args:
             print("No line number given")
             return
@@ -347,9 +359,12 @@ def handleCommand(command, filename, args):
         if command == "@" or command == "context" or command == "c":
             command = "@"
         numOfLine = int(args[0])
-        flag_text = str(args[1])
-        addFlag(filename, command, numOfLine, flag_text)
-    elif command == "prio" or command == "i":
+        if len(args) > 1:
+            flag_text = str(args[1])
+            addFlag(filename, command, numOfLine, flag_text)
+        else:
+            prio = "No project or context given"
+    elif command == "prio" or command == "p":
         print("set prio")
         if not args:
             print("No line number given")
@@ -358,7 +373,10 @@ def handleCommand(command, filename, args):
             print("Number of line(args0) is not a integer" )
             return
         numOfLine = int(args[0])
-        prio = str(args[1])
+        if len(args) > 1:
+            prio = str(args[1])
+        else:
+            prio = "empty"
         handlePrefix(filename, "prio", numOfLine, prio)
     elif command == "clean":
         confirm = input("Are you sure? It will delete ALL Tasks! [Y/N]: ")
@@ -368,8 +386,11 @@ def handleCommand(command, filename, args):
             f.close()
     elif command == "clear":
         print( "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n" )
+    elif command == "help" or command == "h":
+        usage()
     else:
         print("Cann't found command: %s " % command)
+        usage()
 
 
 def main(argv):
@@ -389,18 +410,10 @@ def main(argv):
     _donefile = config['files']['donefile']
     _text = None
 
-    if cmdcommand in ("h", "help"):
-        usage()                          
-        sys.exit()  
-    elif cmdcommand in ("a", "add"):
-        handleCommand("add", _todofile, cmdtext)
+    if cmdcommand:
+        handleCommand(cmdcommand, _todofile, cmdtext)
         sys.exit()
-    elif cmdcommand in ("ls", "list"):
-        handleCommand("list", _todofile, _text)
-        sys.exit()
-    if cmdcommand in ("-i", "--input"):
-        _todofile = arg
-    
+
     handleCommand("list", _todofile, _text)
 
     while True:
