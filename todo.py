@@ -4,6 +4,7 @@ import getopt
 import win32console
 from colorama import init, Fore, Back, Style
 import configparser
+import datetime
 
 # use Colorama
 init()
@@ -11,8 +12,7 @@ taskcolorlist = [(33,"YELLOW"), (32,"GREEN"), (34,"BLUE"), (37,"WHITE")]
 colorlist = [(30,"BLACK"), (31,"RED"), (32,"GREEN"), (33,"YELLOW"), (34,"BLUE"), (35,"MAGENTA"), (36,"CYAN"), (37,"WHITE")]
 
 DEBUG = True
-NONE_PRIORITY = "z" # 默认优先级
-MAGIC_REPLACE_PLACEHOLDER = "%" # edit模式下代替原本文字
+NONE_PRIORITY = "z" # lowercase "z" because sorting
 
 complete_reg = r"^x "
 complete_prefix = "x"
@@ -153,7 +153,7 @@ def usage():
     h or help                   show help info
     a or add                    add a new task
     ls or list                  list all tasks(sorted by prio)
-    x or do or done <id>        marks task as done
+    d or do or done <id>        marks task as done
     e or edit <id>              edit text of task
     del or delete <id>          deletes task
     + or project <id> <text>    add project flag to task
@@ -214,19 +214,13 @@ def edit(filename, numOfLine):
     # lines = lines[:numOfLine] + lines[numOfLine+1:]
     try:
         orig = lines[numOfLine-1].strip()
-        # input(orig)
         newtxt = input_def("EDIT: ", orig)
-        # lines[numOfLine-1] = newText.replace(MAGIC_REPLACE_PLACEHOLDER, newtxt) + "\n"
         lines[numOfLine-1] = newtxt + "\n"
     except:
         print(str(numOfLine) + " task is not exists")
     finally:
         f.writelines(lines)
         f.close()
-
-
-def getThingsDone(filename, numOfLine):
-    edit(filename, numOfLine, complete_prefix + " " + MAGIC_REPLACE_PLACEHOLDER)
 
 def deleteTask(filename, numOfLine):
     f = open(filename, "r+")
@@ -254,7 +248,9 @@ def handlePrefix(filename, command, numOfLine, prio=""):
     try:
         orig = lines[numOfLine-1].strip()
         if command == "done":
-            newtxt = str(complete_prefix)+" "+str(orig)
+            now = datetime.datetime.now()
+            donedate = now.strftime("%Y-%m-%d")
+            newtxt = str(complete_prefix)+" "+str(donedate)+" "+str(orig)
             lines[numOfLine-1] = newtxt + "\n"
         elif command == "prio":
             m = re.search(priority_reg, orig)
@@ -312,7 +308,7 @@ def handleCommand(command, filename, args):
         f = open(filename, "r+")
         list(f.readlines())
         f.close()
-    elif command == "done" or command == "do" or command == "x":
+    elif command == "done" or command == "do" or command == "d":
         if not args:
             print("No line number given")
             return
@@ -414,6 +410,7 @@ def main(argv):
         handleCommand(cmdcommand, _todofile, cmdtext)
         sys.exit()
 
+    handleCommand("clear", filename, "")
     handleCommand("list", _todofile, _text)
 
     while True:
