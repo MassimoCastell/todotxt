@@ -159,11 +159,11 @@ def usage():
     + or project <id> <text>    add project flag to task
     @ or context <id> <text>    add context flag to task
     p or prio <id>              set priority of task. Empty <id> deletes prio
+    archive                     move all done task to the done.txt defined in the ini file
     clean                       deletes all task
     """ )
         
-
-def list(lines):
+def SortTaskPrio(lines):
     todoTasks = []
     completedTasks = []
 
@@ -183,8 +183,11 @@ def list(lines):
     #completedTasks = sorted(completedTasks, key=lambda task: task.completedDate, reverse=True)   # sort by completedDate
 
     tasks = todoTasks + completedTasks
+    return(tasks)
 
-    for t in tasks:
+def list(lines):
+    taskssorted = SortTaskPrio(lines)
+    for t in taskssorted:
         #print( t )
         if not t.isCompleted: 
             # print('\033[;1;'+str(color)+'m' + "{:02}: {}".format(t.id, t.text.strip()) + "\033[;0;0m")
@@ -238,6 +241,13 @@ def deleteTask(filename, numOfLine):
     
     handleCommand("clear", filename, "")
     handleCommand("list", filename, "")
+
+def archiveTasks(filename, donefile):
+    f = open(filename, "r+")
+    list(f.readlines())
+    f.close()
+    taskssorted = SortTaskPrio(list)
+
 
 def handlePrefix(filename, command, numOfLine, prio=""):
     f = open(filename, "r+")
@@ -318,9 +328,9 @@ def handleCommand(command, filename, args):
         numOfLine = int(args[0])
         handlePrefix(filename, "done", numOfLine)
         # re-open
-        f = open(filename, "r+")
-        list(f.readlines())
-        f.close()
+        # f = open(filename, "r+")
+        # list(f.readlines())
+        # f.close()
     elif command == "edit" or command == "e":
         if not args:
             print("No line number given")
@@ -380,12 +390,14 @@ def handleCommand(command, filename, args):
             f = open(filename, "w")
             # delete all lines
             f.close()
+    elif command == "archive":
+        archiveTasks(filename, donefile)
     elif command == "clear":
         print( "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n" )
     elif command == "help" or command == "h":
         usage()
     else:
-        print("Cann't found command: %s " % command)
+        print("Can't find command: %s " % command)
         usage()
 
 
