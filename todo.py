@@ -410,9 +410,12 @@ def main(argv):
         cmdtext = ""
 
     config = configparser.ConfigParser()
-    os.chdir(os.path.dirname(__file__))
-    wrkdir = os.getcwd()
-    config.read(str(wrkdir)+'\\todo.ini')
+    if os.path.isfile(str(os.environ['USERPROFILE'])+'\\todotxt.ini'):
+        config.read(str(os.environ['USERPROFILE'])+'\\todotxt.ini')
+    else:
+        os.chdir(os.path.dirname(__file__))
+        wrkdir = os.getcwd()
+        config.read(str(wrkdir)+'\\todotxt.ini')
 
     _todofile = config['files']['todofile']
     _donefile = config['files']['donefile']
