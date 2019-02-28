@@ -393,7 +393,7 @@ def handleCommand(command, filename, args):
     elif command == "archive":
         archiveTasks(filename, donefile)
     elif command == "clear":
-        print( "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n" )
+        print( "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n" )
     elif command == "help" or command == "h":
         usage()
     else:
@@ -425,7 +425,7 @@ def main(argv):
         handleCommand(cmdcommand, _todofile, cmdtext)
         sys.exit()
 
-    handleCommand("clear", filename, "")
+    handleCommand("clear", _todofile, "")
     handleCommand("list", _todofile, _text)
 
     while True:
