@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding: cp1252
 import sys, re, os
 import getopt
 import win32console
@@ -10,6 +10,17 @@ import datetime
 init()
 taskcolorlist = [(33,"YELLOW"), (32,"GREEN"), (34,"BLUE"), (37,"WHITE")]
 colorlist = [(30,"BLACK"), (31,"RED"), (32,"GREEN"), (33,"YELLOW"), (34,"BLUE"), (35,"MAGENTA"), (36,"CYAN"), (37,"WHITE")]
+
+config = configparser.ConfigParser()
+if os.path.isfile(str(os.environ['USERPROFILE'])+'\\todotxt.ini'):
+    config.read(str(os.environ['USERPROFILE'])+'\\todotxt.ini')
+else:
+    os.chdir(os.path.dirname(__file__))
+    wrkdir = os.getcwd()
+    config.read(str(wrkdir)+'\\todotxt.ini')
+
+todofile = config['files']['todofile']
+donefile = config['files']['donefile']
 
 DEBUG = True
 NONE_PRIORITY = "z" # lowercase "z" because sorting
@@ -242,12 +253,25 @@ def deleteTask(filename, numOfLine):
     handleCommand("clear", filename, "")
     handleCommand("list", filename, "")
 
-def archiveTasks(filename, donefile):
+def archiveTasks(filename):
+    global donefile
     f = open(filename, "r+")
-    list(f.readlines())
+    lines = f.readlines()
     f.close()
-    taskssorted = SortTaskPrio(list)
-
+    taskssorted = SortTaskPrio(lines)
+    to_delete = []
+    for t in taskssorted:
+        if t.isCompleted:
+            tid = str("{}".format(t.id))
+            to_delete.append(tid)
+            f = open(donefile, "a+", encoding='cp1252')
+            f.write(t.text)
+            f.close()
+    for numOfLine in to_delete:
+        lines.remove(lines[numOfLine-1])
+    f = open(filename, "w")
+    f.writelines(lines)
+    f.close()
 
 def handlePrefix(filename, command, numOfLine, prio=""):
     f = open(filename, "r+")
@@ -314,10 +338,8 @@ def handleCommand(command, filename, args):
         f = open(filename, "a+")
         f.write(text+"\n")
         f.close()
-        # re-open
-        f = open(filename, "r+")
-        list(f.readlines())
-        f.close()
+        handleCommand("clear", filename, "")
+        handleCommand("list", filename, "")
     elif command == "done" or command == "do" or command == "d":
         if not args:
             print("No line number given")
@@ -327,10 +349,6 @@ def handleCommand(command, filename, args):
             return
         numOfLine = int(args[0])
         handlePrefix(filename, "done", numOfLine)
-        # re-open
-        # f = open(filename, "r+")
-        # list(f.readlines())
-        # f.close()
     elif command == "edit" or command == "e":
         if not args:
             print("No line number given")
@@ -391,7 +409,7 @@ def handleCommand(command, filename, args):
             # delete all lines
             f.close()
     elif command == "archive":
-        archiveTasks(filename, donefile)
+        archiveTasks(filename)
     elif command == "clear":
         print( "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n" )
     elif command == "help" or command == "h":
@@ -402,6 +420,8 @@ def handleCommand(command, filename, args):
 
 
 def main(argv):
+    global todofile
+    
     if argv:
         cmdcommand = argv[0]
         cmdtext = argv[1:]
@@ -409,24 +429,12 @@ def main(argv):
         cmdcommand = ""
         cmdtext = ""
 
-    config = configparser.ConfigParser()
-    if os.path.isfile(str(os.environ['USERPROFILE'])+'\\todotxt.ini'):
-        config.read(str(os.environ['USERPROFILE'])+'\\todotxt.ini')
-    else:
-        os.chdir(os.path.dirname(__file__))
-        wrkdir = os.getcwd()
-        config.read(str(wrkdir)+'\\todotxt.ini')
-
-    _todofile = config['files']['todofile']
-    _donefile = config['files']['donefile']
-    _text = None
-
     if cmdcommand:
-        handleCommand(cmdcommand, _todofile, cmdtext)
+        handleCommand(cmdcommand, todofile, cmdtext)
         sys.exit()
 
-    handleCommand("clear", _todofile, "")
-    handleCommand("list", _todofile, _text)
+    handleCommand("clear", todofile, "")
+    handleCommand("list", todofile, "")
 
     while True:
         command = input(":")
@@ -435,7 +443,7 @@ def main(argv):
         args = tmp[1:]
         if (command == "exit") or (command == "quit") or (command == "q"):
             sys.exit()
-        handleCommand(command, _todofile, args)
+        handleCommand(command, todofile, args)
 
 
 if __name__ == "__main__":
