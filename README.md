@@ -21,6 +21,7 @@ pip install -r requirements.txt
 ## **Troubleshooting**
 
 **Windows 10**
+
 Some Python installation under Windows 10 can't forward more than one option in the command line.
 If you have errors adding a new task, you installation has this error.
-Please import the **win10_python_todotxt.reg** to your registry by double click at it will be fixed.
+Please import to fix it the **win10_python_todotxt.reg** to your registry by doubleclicking it.
