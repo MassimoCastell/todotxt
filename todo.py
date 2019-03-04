@@ -266,15 +266,19 @@ def archiveTasks(filename):
     for t in taskssorted:
         if t.isCompleted:
             tid = str("{}".format(t.id))
-            to_delete.append(tid)
+            to_delete.append(int(tid))
             f = open(donefile, "a+", encoding='cp1252')
             f.write(t.text)
             f.close()
+    # delete done tasks in reversed order because autmatic resort of the list index
+    to_delete.sort(reverse = True)
     for numOfLine in to_delete:
         lines.remove(lines[numOfLine-1])
     f = open(filename, "w")
     f.writelines(lines)
     f.close()
+    handleCommand("clear", todofile, "")
+    handleCommand("list", todofile, "")
 
 def handlePrefix(filename, command, numOfLine, prio=""):
     f = open(filename, "r+")
