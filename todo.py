@@ -196,27 +196,30 @@ def SortTaskPrio(lines):
     tasks = todoTasks + completedTasks
     return(tasks)
 
-def list(lines):
+def list(lines, searchstr):
     taskssorted = SortTaskPrio(lines)
+    if searchstr:
+        searchstr = searchstr[0].lower()
     for t in taskssorted:
         #print( t )
-        if not t.isCompleted: 
-            # print('\033[;1;'+str(color)+'m' + "{:02}: {}".format(t.id, t.text.strip()) + "\033[;0;0m")
-            tprojects = ""
-            if t.projects:
-                for x in t.projects:
-                    tprojects = tprojects+" "+str("+"+str(x))
-            tcontexts = ""
-            if t.contexts:
-                for x in t.contexts:
-                    tcontexts = tcontexts+" "+str("@"+str(x))
-            tpriority = ""
-            if t.prioritystring:
-                tpriority = t.prioritystring+" "
-            print('\033[;1;'+str(taskcolorlist[t.color][0])+'m' + "{:02}: ".format(t.id)+ tpriority + t.textContent.strip() + '\033[;0;0m'+
-                  '\033[;1;'+str(t.projectscolor)+'m' + "{}".format(tprojects)+
-                  '\033[;1;'+str(t.contextscolor)+'m' + "{}".format(tcontexts)+
-                  '\033[;0;0m')
+        if not t.isCompleted:
+            if searchstr in str(t.text).lower():
+                # print('\033[;1;'+str(color)+'m' + "{:02}: {}".format(t.id, t.text.strip()) + "\033[;0;0m")
+                tprojects = ""
+                if t.projects:
+                    for x in t.projects:
+                        tprojects = tprojects+" "+str("+"+str(x))
+                tcontexts = ""
+                if t.contexts:
+                    for x in t.contexts:
+                        tcontexts = tcontexts+" "+str("@"+str(x))
+                tpriority = ""
+                if t.prioritystring:
+                    tpriority = t.prioritystring+" "
+                print('\033[;1;'+str(taskcolorlist[t.color][0])+'m' + "{:02}: ".format(t.id)+ tpriority + t.textContent.strip() + '\033[;0;0m'+
+                    '\033[;1;'+str(t.projectscolor)+'m' + "{}".format(tprojects)+
+                    '\033[;1;'+str(t.contextscolor)+'m' + "{}".format(tcontexts)+
+                    '\033[;0;0m')
 
 def edit(filename, numOfLine):
     f = open(filename, "r+")
@@ -330,8 +333,9 @@ def addFlag(filename, command, numOfLine, flag_text):
 
 def handleCommand(command, filename, args):
     if command == "list" or command == "ls":
+        handleCommand("clear", filename, "")
         f = open(filename, "r+")
-        list(f.readlines())
+        list(f.readlines(), args)
         f.close()
     elif command == "add" or command == "a":
         text = " ".join(args)
@@ -358,10 +362,8 @@ def handleCommand(command, filename, args):
             return
         numOfLine = int(args[0])
         edit(filename, numOfLine)
-        # re-open
-        f = open(filename, "r+")
-        list(f.readlines())
-        f.close()
+        handleCommand("clear", filename, "")
+        handleCommand("list", filename, "")
     elif command == "delete" or command == "del":
         if not args:
             print("No line number given")
