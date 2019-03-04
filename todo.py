@@ -200,6 +200,8 @@ def list(lines, searchstr):
     taskssorted = SortTaskPrio(lines)
     if searchstr:
         searchstr = searchstr[0].lower()
+    else:
+        searchstr = ""
     for t in taskssorted:
         #print( t )
         if not t.isCompleted:
@@ -417,7 +419,8 @@ def handleCommand(command, filename, args):
     elif command == "archive":
         archiveTasks(filename)
     elif command == "clear":
-        print( "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n" )
+        # print( "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n" )
+        print('\033[2J')
     elif command == "help" or command == "h":
         usage()
     else:
