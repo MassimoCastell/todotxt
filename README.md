@@ -3,7 +3,7 @@
 Implemented in Python using colorama and pywin32 module
 
 Based on Gina Trapani's ToDo list format in a simple text file.
-You can read all about it [here](https://github.com/ginatrapani/todo.txt-cli/wiki/The-Todo.txt-Format).
+You can read all about it [here](https://github.com/todotxt/todo.txt).
 
 More Information, mobile apps and graphical UIs on the [website](http://todotxt.com/).
 
