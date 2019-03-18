@@ -162,14 +162,15 @@ def usage():
     options:
 
     h or help                   show help info
+    q or quit or exit           quit the editor mode
     a or add                    add a new task
-    ls or list                  list all tasks(sorted by prio)
+    ls or list <text>           list all tasks(sorted by prio). <Text> Searchtext
     d or do or done <id>        marks task as done
     e or edit <id>              edit text of task
     del or delete <id>          deletes task
     + or project <id> <text>    add project flag to task
     @ or context <id> <text>    add context flag to task
-    p or prio <id>              set priority of task. Empty <id> deletes prio
+    p or prio <id> <letter>     set priority of task. Empty <letter> deletes prio from <id>
     archive                     move all done task to the done.txt defined in the ini file
     clean                       deletes all task
     """ )
