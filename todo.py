@@ -114,9 +114,7 @@ def parseTask(text):
         #else:
         #   print( "no date" )
 
-
     # -- Incomplete Tasks: 3 Format Rules --
-
     # Rule 1: If priority exists, it ALWAYS appears first.
     m = re.search(priority_reg, rest)
     if m is not None:
@@ -125,7 +123,7 @@ def parseTask(text):
         task.prioritystring = "("+task.priority+")"
         rest = rest.replace(match, "")
         # rotate through the 3 elements of the taskcolorlist. Using ascii code and modulo operator
-        # if more colors a wished the the "62" and the divisor should be adjusted
+        # if more colors are wished the "62" and the divisor should be adjusted
         task.color = (ord(task.priority)-62) % 3
     #else:
         #print( "no priority" )
@@ -165,6 +163,7 @@ def usage():
     q or quit or exit           quit the editor mode
     a or add                    add a new task
     ls or list <text>           list all tasks(sorted by prio). <Text> Searchtext
+    dls or donelist <text>      list all done tasks(sorted by complete date). <Text> Searchtext
     d or do or done <id>        marks task as done
     e or edit <id>              edit text of task
     del or delete <id>          deletes task
@@ -192,7 +191,7 @@ def SortTaskPrio(lines):
         numOfLine += 1
 
     todoTasks = sorted(todoTasks, key=lambda task: task.priority)   # sort by priority
-    #completedTasks = sorted(completedTasks, key=lambda task: task.completedDate, reverse=True)   # sort by completedDate
+    completedTasks = sorted(completedTasks, key=lambda task: task.completedDate, reverse=True)   # sort by completedDate
 
     tasks = todoTasks + completedTasks
     return(tasks)
@@ -222,6 +221,33 @@ def list(lines, searchstr):
                 print('\033[;1;'+str(taskcolorlist[t.color][0])+'m' + "{:02}: ".format(t.id)+ tpriority + t.textContent.strip() + '\033[;0;0m'+
                     '\033[;1;'+str(t.projectscolor)+'m' + "{}".format(tprojects)+
                     '\033[;1;'+str(t.contextscolor)+'m' + "{}".format(tcontexts)+
+                    '\033[;0;0m')
+
+def donelist(lines, searchstr):
+    taskssorted = SortTaskPrio(lines)
+    if searchstr:
+        searchstr = searchstr[0].lower()
+    else:
+        searchstr = ""
+    for t in taskssorted:
+        #print( t )
+        if t.isCompleted:
+            if searchstr in str(t.text).lower():
+                # print('\033[;1;'+str(color)+'m' + "{:02}: {}".format(t.id, t.text.strip()) + "\033[;0;0m")
+                tprojects = ""
+                if t.projects:
+                    for x in t.projects:
+                        tprojects = tprojects+" "+str("+"+str(x))
+                tcontexts = ""
+                if t.contexts:
+                    for x in t.contexts:
+                        tcontexts = tcontexts+" "+str("@"+str(x))
+                tpriority = ""
+                if t.prioritystring:
+                    tpriority = t.prioritystring+" "
+                print('\033[;1;36m' + "{:02}: ".format(t.id) + t.completedDate +" "+ tpriority + t.textContent.strip() + '\033[;0;0m'+
+                    '\033[;1;36m' + "{}".format(tprojects)+
+                    '\033[;1;36m' + "{}".format(tcontexts)+
                     '\033[;0;0m')
 
 def edit(filename, numOfLine):
@@ -343,6 +369,11 @@ def handleCommand(command, filename, args):
         handleCommand("clear", filename, "")
         f = open(filename, "r+")
         list(f.readlines(), args)
+        f.close()
+    elif command == "donelist" or command == "dls":
+        handleCommand("clear", filename, "")
+        f = open(filename, "r+")
+        donelist(f.readlines(), args)
         f.close()
     elif command == "add" or command == "a":
         text = " ".join(args)
