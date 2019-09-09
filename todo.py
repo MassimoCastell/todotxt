@@ -163,7 +163,7 @@ def usage():
     q or quit or exit           quit the editor mode
     a or add                    add a new task
     ls or list <text>           list all tasks(sorted by prio). <Text> Searchtext
-    dls or donelist <text>      list all done tasks(sorted by complete date). <Text> Searchtext
+    dls or donelist <text>      list all done tasks(sorted by completed date). <Text> Searchtext
     d or do or done <id>        marks task as done
     e or edit <id>              edit text of task
     del or delete <id>          deletes task
@@ -245,9 +245,10 @@ def donelist(lines, searchstr):
                 tpriority = ""
                 if t.prioritystring:
                     tpriority = t.prioritystring+" "
+                # all done tasks printet cyan
                 print('\033[;1;36m' + "{:02}: ".format(t.id) + t.completedDate +" "+ tpriority + t.textContent.strip() + '\033[;0;0m'+
-                    '\033[;1;36m' + "{}".format(tprojects)+
-                    '\033[;1;36m' + "{}".format(tcontexts)+
+                    '\033[;1;'+str(t.projectscolor)+'m' + "{}".format(tprojects)+
+                    '\033[;1;'+str(t.contextscolor)+'m' + "{}".format(tcontexts)+
                     '\033[;0;0m')
 
 def edit(filename, numOfLine):
