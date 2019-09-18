@@ -170,6 +170,8 @@ def usage():
     + or project <id> <text>    add project flag to task
     @ or context <id> <text>    add context flag to task
     p or prio <id> <letter>     set priority of task. Empty <letter> deletes prio from <id>
+                                if <letter> is "+" or "-" it increase/decrease prio
+    o or open <id>              if a URL is in the task, it will be opend in Firefox New Tab
     archive                     move all done task to the done.txt defined in the ini file
     clean                       deletes all task
     """ )
@@ -330,13 +332,37 @@ def handlePrefix(filename, command, numOfLine, prio=""):
                 if prio == "empty":
                     newtxt = orig[4:]
                     lines[numOfLine-1] = newtxt + "\n"
+                elif prio == "+":
+                    origprio = orig[:3]
+                    origprio = origprio.strip().replace("(", "").replace(")", "")
+                    orignoprio = orig[4:]
+                    prio = origprio.upper()
+                    if origprio == "A":
+                        prio = "A"
+                    else:
+                        prio = chr(ord(origprio)-1)
+                    newtxt = "("+str(prio).upper()+") "+str(orignoprio)
+                    lines[numOfLine-1] = newtxt + "\n"
+                elif prio == "-":
+                    origprio = orig[:3]
+                    origprio = origprio.strip().replace("(", "").replace(")", "")
+                    orignoprio = orig[4:]
+                    prio = origprio.upper()
+                    if origprio == "Z":
+                        prio = "Z"
+                    else:
+                        prio = chr(ord(origprio)+1)
+                    newtxt = "("+str(prio).upper()+") "+str(orignoprio)
+                    lines[numOfLine-1] = newtxt + "\n"
+
                 else:
                     orignoprio = orig[4:]
                     newtxt = "("+str(prio).upper()+") "+str(orignoprio)
                     lines[numOfLine-1] = newtxt + "\n"
             else:
-                newtxt = "("+str(prio).upper()+") "+str(orig)
-                lines[numOfLine-1] = newtxt + "\n"
+                if prio.isalpha():
+                    newtxt = "("+str(prio).upper()+") "+str(orig)
+                    lines[numOfLine-1] = newtxt + "\n"
     except:
         print(str(numOfLine) + " task is not exists")
     finally:
@@ -364,6 +390,30 @@ def addFlag(filename, command, numOfLine, flag_text):
     
     handleCommand("clear", filename, "")
     handleCommand("list", filename, "")
+
+def openurl(filename, numOfLine):
+    f = open(filename, "r+")
+    lines = f.readlines()
+    f.close()
+
+    f = open(filename, "r+")
+    try:
+        line = lines[numOfLine-1].strip()
+        urltxt = re.search(r"(http|https|ftp|ftps):\/\/[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(\/\S*)?", line)
+        if urltxt is not None:
+            url = urltxt.group(0)
+            # os.startfile(url)
+            os.spawnl(os.P_NOWAIT, r'C:\Program Files\Mozilla Firefox\Firefox.exe', r'FireFox', '-new-tab', url)
+        else:
+            print("no URL in task")
+    except:
+        print(str(numOfLine) + " task is not exists")
+    finally:
+        f.close()
+
+    handleCommand("clear", filename, "")
+    handleCommand("list", filename, "")
+
 
 def handleCommand(command, filename, args):
     if command == "list" or command == "ls":
@@ -443,6 +493,15 @@ def handleCommand(command, filename, args):
         else:
             prio = "empty"
         handlePrefix(filename, "prio", numOfLine, prio)
+    elif command == "open" or command == "o":
+        if not args:
+            print("No line number given")
+            return
+        if not is_int(args[0]):
+            print("Number of line(args0) is not a integer" )
+            return
+        numOfLine = int(args[0])
+        openurl(filename, numOfLine)
     elif command == "clean":
         confirm = input("Are you sure? It will delete ALL Tasks! [Y/N]: ")
         if confirm == "Y":
