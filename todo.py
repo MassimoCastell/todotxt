@@ -162,7 +162,7 @@ def usage():
     h or help                   show help info
     q or quit or exit           quit the editor mode
     a or add                    add a new task
-    ls or list <text>           list all tasks(sorted by prio). <Text> Searchtext
+    ls or list <text>           list all tasks(sorted by prio). <Text> Searchtext. if only one character the prio.
     dls or donelist <text>      list all done tasks(sorted by completed date). <Text> Searchtext
     d or do or done <id>        marks task as done
     e or edit <id>              edit text of task
@@ -202,6 +202,8 @@ def list(lines, searchstr):
     taskssorted = SortTaskPrio(lines)
     if searchstr:
         searchstr = searchstr[0].lower()
+        if len(searchstr) == 1:
+            searchstr = str("(")+searchstr+str(")")
     else:
         searchstr = ""
     for t in taskssorted:
