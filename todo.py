@@ -5,10 +5,20 @@ import win32console
 from colorama import init, Fore, Back, Style
 import configparser
 import datetime
+import win32com.client
+
+# # connect to outlook tasks
+# try:
+#     outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
+#     if (outlook):
+#         todo_folder = outlook.GetDefaultFolder(13)
+#         todo_items = todo_folder.Items
+# except:
+#     pass
 
 # use Colorama
 init()
-taskcolorlist = [(33,"YELLOW"), (32,"GREEN"), (34,"BLUE"), (37,"WHITE")]
+taskcolorlist = [(33,"YELLOW"), (32,"GREEN"), (36,"CYAN"), (37,"WHITE")]
 colorlist = [(30,"BLACK"), (31,"RED"), (32,"GREEN"), (33,"YELLOW"), (34,"BLUE"), (35,"MAGENTA"), (36,"CYAN"), (37,"WHITE")]
 
 config = configparser.ConfigParser()
@@ -75,6 +85,7 @@ class Task:
         self.taskContent = None
         # set default color to 4th element of taskcolorlist because tasks with prio rotate through the first 3 colors
         self.color = 3
+        self.outlookid = ""
         self.id = 0
 
     def __str__(self):
@@ -86,7 +97,7 @@ class Task:
     + ", projects=" + str(self.projects) \
     + ", contexts=" + str(self.contexts) \
     + ", taskContent=" + str(self.taskContent) \
-    + ""
+    + ", outlookid=" + str(self.outlookid)
 
 
 def parseTask(text):
@@ -287,8 +298,8 @@ def deleteTask(filename, numOfLine):
         f.writelines(lines)
         f.close()
     
-    handleCommand("clear", filename, "")
-    handleCommand("list", filename, "")
+    # handleCommand("clear", filename, "")
+    # handleCommand("list", filename, "")
 
 def archiveTasks(filename):
     global donefile
@@ -329,7 +340,6 @@ def handlePrefix(filename, command, numOfLine, prio=""):
             lines[numOfLine-1] = newtxt + "\n"
         elif command == "prio":
             m = re.search(priority_reg, orig)
-            print(prio)
             if m is not None:
                 if prio == "empty":
                     newtxt = orig[4:]
@@ -371,8 +381,8 @@ def handlePrefix(filename, command, numOfLine, prio=""):
         f.writelines(lines)
         f.close()
     
-    handleCommand("clear", filename, "")
-    handleCommand("list", filename, "")
+    # handleCommand("clear", filename, "")
+    # handleCommand("list", filename, "")
 
 def addFlag(filename, command, numOfLine, flag_text):
     f = open(filename, "r+")
@@ -390,8 +400,8 @@ def addFlag(filename, command, numOfLine, flag_text):
     finally:
         f.close()
     
-    handleCommand("clear", filename, "")
-    handleCommand("list", filename, "")
+    # handleCommand("clear", filename, "")
+    # handleCommand("list", filename, "")
 
 def openurl(filename, numOfLine):
     f = open(filename, "r+")
@@ -413,12 +423,16 @@ def openurl(filename, numOfLine):
     finally:
         f.close()
 
-    handleCommand("clear", filename, "")
-    handleCommand("list", filename, "")
+    # handleCommand("clear", filename, "")
+    # handleCommand("list", filename, "")
 
 
 def handleCommand(command, filename, args):
-    if command == "list" or command == "ls":
+    if command == "list" or command[:2] == "ls":
+        if command[:2] == "ls" and len(command) == 3:
+            args = command[2]
+        else:
+            args = args
         handleCommand("clear", filename, "")
         f = open(filename, "r+")
         list(f.readlines(), args)
@@ -453,8 +467,6 @@ def handleCommand(command, filename, args):
             return
         numOfLine = int(args[0])
         edit(filename, numOfLine)
-        handleCommand("clear", filename, "")
-        handleCommand("list", filename, "")
     elif command == "delete" or command == "del":
         if not args:
             print("No line number given")
@@ -482,7 +494,7 @@ def handleCommand(command, filename, args):
         else:
             prio = "No project or context given"
     elif command == "prio" or command == "p":
-        print("set prio")
+        # print("set prio")
         if not args:
             print("No line number given")
             return
@@ -504,6 +516,12 @@ def handleCommand(command, filename, args):
             return
         numOfLine = int(args[0])
         openurl(filename, numOfLine)
+    elif command == "vim":
+        os.system(r'vim '+str(filename))
+        # os.spawnl(os.P_NOWAIT, r'C:\Program Files (x86)\Vim\vim82\vim.exe', r'vim', filename)
+        # os.startfile(url)
+        # os.spawnl(os.P_NOWAIT, r'C:\Program Files\Mozilla Firefox\Firefox.exe', r'FireFox', '-new-tab', url)
+        # openurl(filename, numOfLine)
     elif command == "clean":
         confirm = input("Are you sure? It will delete ALL Tasks! [Y/N]: ")
         if confirm == "Y":
@@ -523,8 +541,7 @@ def handleCommand(command, filename, args):
 
 
 def main(argv):
-    global todofile
-    
+
     if argv:
         cmdcommand = argv[0]
         cmdtext = argv[1:]
