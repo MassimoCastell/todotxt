@@ -375,6 +375,10 @@ def handlePrefix(filename, command, numOfLine, prio=""):
                 if prio.isalpha():
                     newtxt = "("+str(prio).upper()+") "+str(orig)
                     lines[numOfLine-1] = newtxt + "\n"
+                else:
+                    newtxt = orig[:3]
+                    lines[numOfLine-1] = newtxt + "\n"
+
     except:
         print(str(numOfLine) + " task is not exists")
     finally:
